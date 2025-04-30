@@ -37,11 +37,25 @@ class LojaViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def produtos(self, request, pk=None):
+        loja = self.get_object()
+        produtos = loja.produtos.all()
+        serializer = ProdutoSerializer(produtos, many=True)
+        return Response(serializer.data)
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
+
+    @action(detail=True, methods=['get'])
+    def lojas(self, request, pk=None):
+        produto = self.get_object()
+        lojas = produto.lojas.all()
+        serializer = LojaSerializer(lojas, many=True)
+        return Response(serializer.data)
 
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
@@ -52,6 +66,12 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     def lojas(self, request, pk=None):
         categoria = self.get_object()
         serializer = LojaSerializer(categoria.lojas.all(), many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def setores(self, request, pk=None):
+        categoria = self.get_object()
+        serializer = SetorSerializer(categoria.setores.all(), many=True)
         return Response(serializer.data)
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
@@ -81,6 +101,13 @@ class SetorViewSet(viewsets.ModelViewSet):
     queryset = Setor.objects.all()
     serializer_class = SetorSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
+
+    @action(detail=True, methods=['get'])
+    def categorias(self, request, pk=None):
+        setor = self.get_object()
+        categorias = setor.categorias.all()
+        serializer = CategoriaSerializer(categorias, many=True)
+        return Response(serializer.data)
 
 class TotemPessoalViewSet(viewsets.ModelViewSet):
     queryset = TotemPessoal.objects.all()

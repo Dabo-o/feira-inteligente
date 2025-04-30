@@ -44,15 +44,14 @@ class TotemPessoal(Base):
 
 class Categoria(Base):
     nome = models.CharField(max_length=255)
-    setor = models.ForeignKey('Setor', on_delete=models.SET_NULL, null=True, related_name='categorias')
 
     def __str__(self):
         return self.nome
 
 class Setor(Base):
     nome = models.CharField(max_length=255)
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='setores')
     lojas = models.ForeignKey('Loja', on_delete=models.SET_NULL, null=True, related_name='setores')
+    categorias = models.ManyToManyField(Categoria, related_name='setores')
 
     def __str__(self):
         return self.nome
@@ -75,12 +74,25 @@ class Cliente(Base):
 
     def __str__(self):
         return self.nome
+    
+class Produto(Base):
+    nome = models.CharField(max_length=255)
+    descricao = models.TextField()
+    imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='produtos')
+    cor = models.CharField(max_length=50)
+    composicao = models.TextField()
+    url_video = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nome
 
 class Loja(Base):
     nome = models.CharField(max_length=255)
     banner = models.ImageField(upload_to='lojas/banners/', blank=True, null=True)
     logo = models.ImageField(upload_to='lojas/logos/', blank=True, null=True)
     descricao = models.TextField()
+    produtos = models.ManyToManyField(Produto, related_name='lojas')
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='lojas')
     localizacao = models.CharField(max_length=255)
     lojista = models.ForeignKey(Lojista, on_delete=models.CASCADE, related_name='lojas')
@@ -89,19 +101,6 @@ class Loja(Base):
     horario_funcionamento = models.CharField(max_length=255)
     avaliacoes = models.ManyToManyField('Avaliacao', related_name='lojas', blank=True)
     nota = models.FloatField(default=0)
-
-    def __str__(self):
-        return self.nome
-
-class Produto(Base):
-    nome = models.CharField(max_length=255)
-    descricao = models.TextField()
-    imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
-    loja = models.ForeignKey(Loja, on_delete=models.CASCADE, related_name='produtos')
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='produtos')
-    cor = models.CharField(max_length=50)
-    composicao = models.TextField()
-    url_video = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.nome

@@ -17,14 +17,15 @@ class TotemPessoalAdmin(admin.ModelAdmin):
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'setor', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome','ativo', 'criacao', 'atualizacao')
     search_fields = ('nome',)
     list_filter = ('ativo',)
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'categoria', 'lojas', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'lojas', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome',)
+    filter_horizontal = ['categorias']
     list_filter = ('ativo',)
 
 @admin.register(Cliente)
@@ -37,11 +38,12 @@ class ClienteAdmin(admin.ModelAdmin):
 class LojaAdmin(admin.ModelAdmin):
     list_display = ('nome', 'categoria', 'localizacao', 'lojista', 'nota', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'localizacao', 'lojista__nome')
+    filter_horizontal = ['produtos']
     list_filter = ('ativo',)
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'loja', 'categoria', 'cor', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'categoria', 'cor', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'cor')
     list_filter = ('ativo',)
 

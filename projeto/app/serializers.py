@@ -34,13 +34,13 @@ class ClienteSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
-class LojaSerializer(serializers.ModelSerializer):
+
+class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Loja
+        model = Produto
         fields = (
-            'id', 'nome', 'banner', 'logo', 'descricao', 'categoria', 'localizacao',
-            'lojista', 'foto_da_loja', 'redes_sociais', 'horario_funcionamento', 
-            'avaliacoes', 'nota', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'descricao', 'imagem', 'categoria', 'cor', 
+            'composicao', 'url_video', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -48,13 +48,18 @@ class LojaSerializer(serializers.ModelSerializer):
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
         }
+class LojaSerializer(serializers.ModelSerializer):
+    produtos = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Produto.objects.all()
+    )
 
-class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Produto
+        model = Loja
         fields = (
-            'id', 'nome', 'descricao', 'imagem', 'loja', 'categoria', 'cor', 
-            'composicao', 'url_video', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'banner', 'logo', 'descricao','produtos', 'categoria', 'localizacao',
+            'lojista', 'foto_da_loja', 'redes_sociais', 'horario_funcionamento', 
+            'avaliacoes', 'nota', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -67,7 +72,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = (
-            'id', 'nome', 'setor', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -117,10 +122,16 @@ class LojaFavoritaSerializer(serializers.ModelSerializer):
         }
 
 class SetorSerializer(serializers.ModelSerializer):
+
+    categorias = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
+
     class Meta:
         model = Setor
         fields = (
-            'id', 'nome', 'categoria', 'lojas', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'categorias', 'lojas', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
