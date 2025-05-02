@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework import filters
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
@@ -22,11 +23,34 @@ class ClienteViewSet(viewsets.ModelViewSet):
     serializer_class = ClienteSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    @action(detail=True, methods=['get'])
+    def produtos_favoritos(self, request, pk=None):
+        cliente = self.get_object()
+        produtos = cliente.produtos_favoritos.all()
+        serializer = ProdutoSerializer(produtos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def lojas_favoritas(self, request, pk=None):
+        cliente = self.get_object()
+        lojas = cliente.lojas_favoritas.all()
+        serializer = LojaSerializer(lojas, many=True)
+        return Response(serializer.data)
+
 class LojaViewSet(viewsets.ModelViewSet):
     queryset = Loja.objects.all()
     serializer_class = LojaSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    # ACTION PRA BUSCAR PELO NOME
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
+    # ACTION PARA PAGINAÇÃO
     @action(detail=True, methods=['get'])
     def avaliacoes(self, request, pk=None):
         self.pagination_class.page_size = 1  # Paginação: 1 por página
@@ -38,6 +62,7 @@ class LojaViewSet(viewsets.ModelViewSet):
         serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
         return Response(serializer.data)
     
+    # ACTION PARA ENDPOINT /lojas/1/produtos
     @action(detail=True, methods=['get'])
     def produtos(self, request, pk=None):
         loja = self.get_object()
@@ -50,6 +75,15 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     serializer_class = ProdutoSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    # ACTION PARA BUSCAR PELO NOME
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
+    # ACTION PARA CRIAÇÃO DE /produtos/1/lojas
     @action(detail=True, methods=['get'])
     def lojas(self, request, pk=None):
         produto = self.get_object()
@@ -101,6 +135,13 @@ class SetorViewSet(viewsets.ModelViewSet):
     queryset = Setor.objects.all()
     serializer_class = SetorSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
+
+    @action(detail=True, methods=['get'])
+    def lojas(self, request, pk=None):
+        setor = self.get_object()
+        lojas = setor.lojas.all()
+        serializer = LojaSerializer(lojas, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def categorias(self, request, pk=None):

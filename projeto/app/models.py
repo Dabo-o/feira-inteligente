@@ -50,7 +50,7 @@ class Categoria(Base):
 
 class Setor(Base):
     nome = models.CharField(max_length=255)
-    lojas = models.ForeignKey('Loja', on_delete=models.SET_NULL, null=True, related_name='setores')
+    lojas = models.ManyToManyField('Loja', related_name='setores')
     categorias = models.ManyToManyField(Categoria, related_name='setores')
 
     def __str__(self):
@@ -62,15 +62,38 @@ class Cliente(Base):
         ('Local', 'Local'),
         ('Comerciante', 'Comerciante'),
     ]
+    FAIXA_ETARIA_CHOICES = [
+        ('12-', '12-'),
+        ('13-17', '13-17'),
+        ('18-24', '18-24'),
+        ('25-34', '25-34'),
+        ('35-44', '35-44'),
+        ('45-54', '45-54'),
+        ('55-64', '55-64'),
+        ('65+', '65+'),
+    ]
     nome = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)
     foto = models.ImageField(upload_to='clientes/', blank=True, null=True)
-    faixa_etaria = models.CharField(max_length=20)
+    faixa_etaria = models.CharField(max_length=10, choices=FAIXA_ETARIA_CHOICES)
     genero = models.CharField(max_length=50)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='clientes')
+
+    produtos_favoritos = models.ManyToManyField(
+        'Produto',
+        through='ProdutoFavorito',
+        related_name='clientes_que_favoritaram',
+        related_query_name='cliente_que_favoritou'
+    )
+    lojas_favoritas = models.ManyToManyField(
+        'Loja',
+        through='LojaFavorita',
+        related_name='clientes_que_favoritaram',
+        related_query_name='cliente_que_favoritou'
+    )
 
     def __str__(self):
         return self.nome
@@ -115,15 +138,35 @@ class Avaliacao(Base):
         return f'{self.cliente.nome} avaliou {self.loja.nome}'
 
 class ProdutoFavorito(Base):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='produtos_favoritos')
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='favoritado_por')
+    cliente = models.ForeignKey(
+        'Cliente',
+        on_delete=models.CASCADE,
+        related_name='produto_favorito_rel',
+        related_query_name='produto_favorito'
+    )
+    produto = models.ForeignKey(
+        'Produto',
+        on_delete=models.CASCADE,
+        related_name='cliente_favorito_rel',
+        related_query_name='cliente_favorito'
+    )
 
     def __str__(self):
         return f'{self.cliente.nome} favoritou {self.produto.nome}'
 
 class LojaFavorita(Base):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='lojas_favoritas')
-    loja = models.ForeignKey(Loja, on_delete=models.CASCADE, related_name='favoritada_por')
+    cliente = models.ForeignKey(
+        'Cliente',
+        on_delete=models.CASCADE,
+        related_name='loja_favorita_rel',
+        related_query_name='loja_favorita'
+    )
+    loja = models.ForeignKey(
+        'Loja',
+        on_delete=models.CASCADE,
+        related_name='cliente_favorita_rel',
+        related_query_name='cliente_favorita'
+    )
 
     def __str__(self):
         return f'{self.cliente.nome} favoritou {self.loja.nome}'

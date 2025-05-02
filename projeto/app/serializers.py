@@ -19,21 +19,6 @@ class LojistaSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
-class ClienteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cliente
-        fields = (
-            'id', 'nome', 'email', 'senha', 'telefone', 'foto', 'faixa_etaria',
-            'genero', 'tipo', 'categoria', 'criacao', 'atualizacao', 'ativo'
-        )
-        extra_kwargs = {
-            'senha': {'write_only': True},
-            'id': {'read_only': True},
-            'criacao': {'read_only': True},
-            'atualizacao': {'read_only': True},
-            'ativo': {'read_only': True},
-        }
-
 
 class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,6 +47,26 @@ class LojaSerializer(serializers.ModelSerializer):
             'avaliacoes', 'nota', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
+            'avaliacoes': {'read_only': True},
+            'id': {'read_only': True},
+            'criacao': {'read_only': True},
+            'atualizacao': {'read_only': True},
+            'ativo': {'read_only': True},
+        }
+
+class ClienteSerializer(serializers.ModelSerializer):
+
+    produtos_favoritos = ProdutoSerializer(many=True, read_only=True)
+    lojas_favoritas = LojaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Cliente
+        fields = (
+            'id', 'nome', 'email', 'senha', 'telefone', 'foto', 'faixa_etaria',
+            'genero', 'tipo', 'categoria','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
+        )
+        extra_kwargs = {
+            'senha': {'write_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
             'atualizacao': {'read_only': True},
@@ -122,6 +127,11 @@ class LojaFavoritaSerializer(serializers.ModelSerializer):
         }
 
 class SetorSerializer(serializers.ModelSerializer):
+    
+    lojas = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Loja.objects.all()
+    )
 
     categorias = serializers.PrimaryKeyRelatedField(
         many=True,

@@ -23,8 +23,9 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'lojas', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome',)
+    filter_horizontal = ['lojas']
     filter_horizontal = ['categorias']
     list_filter = ('ativo',)
 
