@@ -79,8 +79,9 @@ class Cliente(Base):
     foto = models.ImageField(upload_to='clientes/', blank=True, null=True)
     faixa_etaria = models.CharField(max_length=10, choices=FAIXA_ETARIA_CHOICES)
     genero = models.CharField(max_length=50)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='clientes')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)    
+    categorias_desejadas = models.ManyToManyField(Categoria, related_name='clientes', blank=True)
+    
 
     produtos_favoritos = models.ManyToManyField(
         'Produto',

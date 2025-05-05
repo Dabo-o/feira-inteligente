@@ -34,6 +34,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 class LojaSerializer(serializers.ModelSerializer):
+    nota_media = serializers.FloatField(read_only=True)
     produtos = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Produto.objects.all()
@@ -44,9 +45,10 @@ class LojaSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'nome', 'banner', 'logo', 'descricao','produtos', 'categoria', 'localizacao',
             'lojista', 'foto_da_loja', 'redes_sociais', 'horario_funcionamento', 
-            'avaliacoes', 'nota', 'criacao', 'atualizacao', 'ativo'
+            'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
+            'nota': {'read_only': True},
             'avaliacoes': {'read_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
@@ -55,6 +57,10 @@ class LojaSerializer(serializers.ModelSerializer):
         }
 
 class ClienteSerializer(serializers.ModelSerializer):
+    categorias_desejadas = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
 
     produtos_favoritos = ProdutoSerializer(many=True, read_only=True)
     lojas_favoritas = LojaSerializer(many=True, read_only=True)
@@ -63,7 +69,7 @@ class ClienteSerializer(serializers.ModelSerializer):
         model = Cliente
         fields = (
             'id', 'nome', 'email', 'senha', 'telefone', 'foto', 'faixa_etaria',
-            'genero', 'tipo', 'categoria','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
+            'genero', 'tipo', 'categorias_desejadas','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'senha': {'write_only': True},

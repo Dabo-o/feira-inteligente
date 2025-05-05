@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Avg
 from rest_framework import filters
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
@@ -24,6 +25,13 @@ class ClienteViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DjangoModelPermissions,)
 
     @action(detail=True, methods=['get'])
+    def categorias_desejadas(self, request, pk=None):
+        cliente = self.get_object()
+        categorias_desejadas = cliente.categorias_desejadas.all()
+        serializer = CategoriaSerializer(categorias_desejadas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
     def produtos_favoritos(self, request, pk=None):
         cliente = self.get_object()
         produtos = cliente.produtos_favoritos.all()
@@ -38,13 +46,13 @@ class ClienteViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class LojaViewSet(viewsets.ModelViewSet):
-    queryset = Loja.objects.all()
+
     serializer_class = LojaSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
-    # ACTION PRA BUSCAR PELO NOME
+
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Loja.objects.annotate(nota_media=Avg('avaliacoes_recebidas__nota'))
         nome = self.request.query_params.get('nome')
         if nome:
             queryset = queryset.filter(nome__icontains=nome)

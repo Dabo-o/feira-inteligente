@@ -31,14 +31,16 @@ class SetorAdmin(admin.ModelAdmin):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'email', 'telefone', 'tipo', 'categoria', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'email', 'telefone', 'tipo', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'email', 'telefone')
+    filter_horizontal = ['categorias_desejadas']
     list_filter = ('tipo', 'ativo')
 
 @admin.register(Loja)
 class LojaAdmin(admin.ModelAdmin):
     list_display = ('nome', 'categoria', 'localizacao', 'lojista', 'nota', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'localizacao', 'lojista__nome')
+    filter_horizontal = ['avaliacoes']
     filter_horizontal = ['produtos']
     list_filter = ('ativo',)
 
