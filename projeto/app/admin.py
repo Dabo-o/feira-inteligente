@@ -25,8 +25,6 @@ class CategoriaAdmin(admin.ModelAdmin):
 class SetorAdmin(admin.ModelAdmin):
     list_display = ('nome', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome',)
-    filter_horizontal = ['lojas']
-    filter_horizontal = ['categorias']
     list_filter = ('ativo',)
 
 @admin.register(Cliente)
@@ -38,15 +36,17 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(Loja)
 class LojaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'categoria', 'localizacao', 'lojista', 'nota', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'localizacao', 'lojista', 'nota', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'localizacao', 'lojista__nome')
+    filter_horizontal = ['categorias']
     filter_horizontal = ['avaliacoes']
     filter_horizontal = ['produtos']
     list_filter = ('ativo',)
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'categoria', 'cor', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'cor', 'ativo', 'criacao', 'atualizacao')
+    filter_horizontal = ['categorias']
     search_fields = ('nome', 'cor')
     list_filter = ('ativo',)
 

@@ -26,13 +26,12 @@ class TotemPessoal(Base):
         ('Comerciante', 'Comerciante'),
     ]
     FAIXA_ETARIA_CHOICES = [
-        ('12-', '12-'),
-        ('13-17', '13-17'),
-        ('18-24', '18-24'),
-        ('25-34', '25-34'),
-        ('35-44', '35-44'),
-        ('45-54', '45-54'),
-        ('55-64', '55-64'),
+        ('18-', '18-'),
+        ('18-25', '18-25'),
+        ('26-35', '26-35'),
+        ('36-45', '36-45'),
+        ('46-55', '46-55'),
+        ('56-65', '56-65'),
         ('65+', '65+'),
     ]
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO_CHOICES)
@@ -50,8 +49,6 @@ class Categoria(Base):
 
 class Setor(Base):
     nome = models.CharField(max_length=255)
-    lojas = models.ManyToManyField('Loja', related_name='setores')
-    categorias = models.ManyToManyField(Categoria, related_name='setores')
 
     def __str__(self):
         return self.nome
@@ -63,13 +60,12 @@ class Cliente(Base):
         ('Comerciante', 'Comerciante'),
     ]
     FAIXA_ETARIA_CHOICES = [
-        ('12-', '12-'),
-        ('13-17', '13-17'),
-        ('18-24', '18-24'),
-        ('25-34', '25-34'),
-        ('35-44', '35-44'),
-        ('45-54', '45-54'),
-        ('55-64', '55-64'),
+        ('18-', '18-'),
+        ('18-25', '18-25'),
+        ('26-35', '26-35'),
+        ('36-45', '36-45'),
+        ('46-55', '46-55'),
+        ('56-65', '56-65'),
         ('65+', '65+'),
     ]
     nome = models.CharField(max_length=255)
@@ -103,10 +99,9 @@ class Produto(Base):
     nome = models.CharField(max_length=255)
     descricao = models.TextField()
     imagem = models.ImageField(upload_to='produtos/', blank=True, null=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='produtos')
+    categorias = models.ManyToManyField(Categoria, related_name="produtos")
     cor = models.CharField(max_length=50)
     composicao = models.TextField()
-    url_video = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.nome
@@ -117,7 +112,8 @@ class Loja(Base):
     logo = models.ImageField(upload_to='lojas/logos/', blank=True, null=True)
     descricao = models.TextField()
     produtos = models.ManyToManyField(Produto, related_name='lojas')
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='lojas')
+    setor = models.ForeignKey(Setor, on_delete=models.CASCADE,null = True, related_name="lojas")
+    categorias = models.ManyToManyField(Categoria, related_name="lojas")
     localizacao = models.CharField(max_length=255)
     lojista = models.ForeignKey(Lojista, on_delete=models.CASCADE, related_name='lojas')
     foto_da_loja = models.ImageField(upload_to='lojas/fotos/', blank=True, null=True)

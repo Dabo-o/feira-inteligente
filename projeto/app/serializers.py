@@ -21,11 +21,15 @@ class LojistaSerializer(serializers.ModelSerializer):
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    categorias = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
     class Meta:
         model = Produto
         fields = (
-            'id', 'nome', 'descricao', 'imagem', 'categoria', 'cor', 
-            'composicao', 'url_video', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'descricao', 'imagem', 'categorias', 'cor', 
+            'composicao', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -39,16 +43,20 @@ class LojaSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Produto.objects.all()
     )
+    categorias = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
 
     class Meta:
         model = Loja
         fields = (
-            'id', 'nome', 'banner', 'logo', 'descricao','produtos', 'categoria', 'localizacao',
+            'id', 'nome', 'banner', 'logo', 'descricao','produtos','setor', 'categorias', 'localizacao',
             'lojista', 'foto_da_loja', 'redes_sociais', 'horario_funcionamento', 
             'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
-            'nota': {'read_only': True},
+            'nota_media': {'read_only': True},
             'avaliacoes': {'read_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
@@ -133,21 +141,11 @@ class LojaFavoritaSerializer(serializers.ModelSerializer):
         }
 
 class SetorSerializer(serializers.ModelSerializer):
-    
-    lojas = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Loja.objects.all()
-    )
-
-    categorias = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Categoria.objects.all()
-    )
 
     class Meta:
         model = Setor
         fields = (
-            'id', 'nome', 'categorias', 'lojas', 'criacao', 'atualizacao', 'ativo'
+            'id', 'nome', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},

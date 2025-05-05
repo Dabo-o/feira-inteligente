@@ -77,6 +77,13 @@ class LojaViewSet(viewsets.ModelViewSet):
         produtos = loja.produtos.all()
         serializer = ProdutoSerializer(produtos, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def categorias(self, request, pk=None):
+        loja = self.get_object()
+        categorias = loja.categorias.all()
+        serializer = CategoriaSerializer(categorias, many=True)
+        return Response(serializer.data)
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
@@ -97,6 +104,13 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         produto = self.get_object()
         lojas = produto.lojas.all()
         serializer = LojaSerializer(lojas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def categorias(self, request, pk=None):
+        produto = self.get_object()
+        categorias = produto.categorias.all()
+        serializer = CategoriaSerializer(categorias, many=True)
         return Response(serializer.data)
 
 class CategoriaViewSet(viewsets.ModelViewSet):
