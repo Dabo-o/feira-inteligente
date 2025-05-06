@@ -37,6 +37,7 @@ class TotemPessoal(Base):
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO_CHOICES)
     faixa_etaria = models.CharField(max_length=10, choices=FAIXA_ETARIA_CHOICES)
     genero = models.CharField(max_length=50)
+    categoria = models.ForeignKey('Categoria', on_delete=models.SET_NULL, null=True, related_name='pesquisas_totem')
 
     def __str__(self):
         return f'{self.tipo_usuario} - {self.faixa_etaria}'
@@ -168,9 +169,3 @@ class LojaFavorita(Base):
     def __str__(self):
         return f'{self.cliente.nome} favoritou {self.loja.nome}'
 
-class TotemPesquisa(Base):
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='pesquisas_totem')
-    totemid = models.ForeignKey(TotemPessoal, on_delete=models.CASCADE, related_name='pesquisas')
-
-    def __str__(self):
-        return f'Pesquisa {self.id} - {self.data}'

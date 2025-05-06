@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao, 
-    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, TotemPesquisa
+    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal
 )
 
 class LojistaSerializer(serializers.ModelSerializer):
@@ -47,6 +47,12 @@ class LojaSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Categoria.objects.all()
     )
+    avaliacoes = serializers.PrimaryKeyRelatedField(
+        many=True,
+        read_only=True,
+        source='avaliacoes_recebidas'  # ou o related_name que você usou no model
+    )
+
 
     class Meta:
         model = Loja
@@ -158,7 +164,7 @@ class TotemPessoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = TotemPessoal
         fields = (
-            'id', 'tipo_usuario', 'faixa_etaria', 'genero', 'criacao', 'atualizacao', 'ativo'
+            'id', 'tipo_usuario', 'faixa_etaria', 'genero','categoria', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -167,15 +173,3 @@ class TotemPessoalSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
-class TotemPesquisaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TotemPesquisa
-        fields = (
-            'id', 'categoria', 'totemid', 'criacao', 'atualizacao', 'ativo'
-        )
-        extra_kwargs = {
-            'id': {'read_only': True},
-            'criacao': {'read_only': True},
-            'atualizacao': {'read_only': True},
-            'ativo': {'read_only': True},
-        }

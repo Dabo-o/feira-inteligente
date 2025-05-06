@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Lojista, TotemPessoal, Categoria, Setor, Cliente, Loja,
-    Produto, Avaliacao, ProdutoFavorito, LojaFavorita, TotemPesquisa
+    Produto, Avaliacao, ProdutoFavorito, LojaFavorita
 )
 
 @admin.register(Lojista)
@@ -12,7 +12,7 @@ class LojistaAdmin(admin.ModelAdmin):
 
 @admin.register(TotemPessoal)
 class TotemPessoalAdmin(admin.ModelAdmin):
-    list_display = ('tipo_usuario', 'faixa_etaria', 'genero', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('tipo_usuario', 'faixa_etaria', 'genero','categoria', 'ativo', 'criacao', 'atualizacao')
     list_filter = ('tipo_usuario', 'faixa_etaria', 'ativo')
 
 @admin.register(Categoria)
@@ -66,10 +66,4 @@ class ProdutoFavoritoAdmin(admin.ModelAdmin):
 class LojaFavoritaAdmin(admin.ModelAdmin):
     list_display = ('cliente', 'loja','ativo', 'criacao', 'atualizacao')
     search_fields = ('cliente__nome', 'loja__nome')
-    list_filter = ('ativo',)
-
-@admin.register(TotemPesquisa)
-class TotemPesquisaAdmin(admin.ModelAdmin):
-    list_display = ('categoria','totemid', 'ativo', 'criacao', 'atualizacao')
-    search_fields = ('categoria__nome',)
     list_filter = ('ativo',)

@@ -6,12 +6,12 @@ from django.db.models import Avg
 from rest_framework import filters
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
-    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, TotemPesquisa
+    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal
 )
 from .serializers import (
     LojistaSerializer, ClienteSerializer, LojaSerializer, ProdutoSerializer,
     CategoriaSerializer, AvaliacaoSerializer, ProdutoFavoritoSerializer,
-    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, TotemPesquisaSerializer
+    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer
 )
 
 class LojistaViewSet(viewsets.ModelViewSet):
@@ -84,6 +84,7 @@ class LojaViewSet(viewsets.ModelViewSet):
         categorias = loja.categorias.all()
         serializer = CategoriaSerializer(categorias, many=True)
         return Response(serializer.data)
+    
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
@@ -124,11 +125,24 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         serializer = LojaSerializer(categoria.lojas.all(), many=True)
         return Response(serializer.data)
     
+    
     @action(detail=True, methods=['get'])
     def setores(self, request, pk=None):
         categoria = self.get_object()
-        serializer = SetorSerializer(categoria.setores.all(), many=True)
+        
+        # Pega todas as lojas que têm essa categoria
+        lojas = categoria.lojas.all()
+        
+        # Pega os setores dessas lojas
+        setores = set(loja.setor for loja in lojas if loja.setor is not None)
+        
+        # Serializa os setores
+        from .serializers import SetorSerializer  # certifique-se de ter esse serializer criado
+        serializer = SetorSerializer(setores, many=True)
+        
         return Response(serializer.data)
+
+
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
     queryset = Avaliacao.objects.all()
@@ -168,7 +182,9 @@ class SetorViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def categorias(self, request, pk=None):
         setor = self.get_object()
-        categorias = setor.categorias.all()
+
+        # Filtra as categorias das lojas que estão nesse setor
+        categorias = Categoria.objects.filter(lojas__setor=setor).distinct()
         serializer = CategoriaSerializer(categorias, many=True)
         return Response(serializer.data)
 
@@ -177,7 +193,3 @@ class TotemPessoalViewSet(viewsets.ModelViewSet):
     serializer_class = TotemPessoalSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
-class TotemPesquisaViewSet(viewsets.ModelViewSet):
-    queryset = TotemPesquisa.objects.all()
-    serializer_class = TotemPesquisaSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
