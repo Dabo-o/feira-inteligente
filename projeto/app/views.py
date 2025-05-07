@@ -19,10 +19,24 @@ class LojistaViewSet(viewsets.ModelViewSet):
     serializer_class = LojistaSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
 
     @action(detail=True, methods=['get'])
     def categorias_desejadas(self, request, pk=None):
@@ -119,6 +133,13 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
     @action(detail=True, methods=['get'])
     def lojas(self, request, pk=None):
         categoria = self.get_object()
@@ -171,6 +192,13 @@ class SetorViewSet(viewsets.ModelViewSet):
     queryset = Setor.objects.all()
     serializer_class = SetorSerializer
     permission_classes = (permissions.DjangoModelPermissions,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
 
     @action(detail=True, methods=['get'])
     def lojas(self, request, pk=None):
