@@ -1,8 +1,10 @@
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
+from rest_framework.views import APIView
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Avg
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import filters
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
@@ -11,13 +13,38 @@ from .models import (
 from .serializers import (
     LojistaSerializer, ClienteSerializer, LojaSerializer, ProdutoSerializer,
     CategoriaSerializer, AvaliacaoSerializer, ProdutoFavoritoSerializer,
-    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer
+    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer
 )
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def meu_perfil(request):
+    user = request.user
+    data = {"email": user.email}
+
+    if hasattr(user, 'cliente'):
+        data["cliente"] = ClienteSerializer(user.cliente).data
+
+    if hasattr(user, 'lojista'):
+        data["lojista"] = LojistaSerializer(user.lojista).data
+
+    return Response(data)
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ClienteRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Usuário criado com sucesso!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
 class LojistaViewSet(viewsets.ModelViewSet):
     queryset = Lojista.objects.all()
     serializer_class = LojistaSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -29,7 +56,7 @@ class LojistaViewSet(viewsets.ModelViewSet):
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -62,7 +89,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 class LojaViewSet(viewsets.ModelViewSet):
 
     serializer_class = LojaSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
 
     def get_queryset(self):
@@ -103,7 +130,7 @@ class LojaViewSet(viewsets.ModelViewSet):
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
     # ACTION PARA BUSCAR PELO NOME
     def get_queryset(self):
@@ -131,7 +158,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -168,7 +195,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 class AvaliacaoViewSet(viewsets.ModelViewSet):
     queryset = Avaliacao.objects.all()
     serializer_class = AvaliacaoSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
     filter_backends = [filters.SearchFilter]
     search_fields = ['loja__id']
 
@@ -181,17 +208,17 @@ class AvaliacaoViewSet(viewsets.ModelViewSet):
 class ProdutoFavoritoViewSet(viewsets.ModelViewSet):
     queryset = ProdutoFavorito.objects.all()
     serializer_class = ProdutoFavoritoSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
 class LojaFavoritaViewSet(viewsets.ModelViewSet):
     queryset = LojaFavorita.objects.all()
     serializer_class = LojaFavoritaSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
 class SetorViewSet(viewsets.ModelViewSet):
     queryset = Setor.objects.all()
     serializer_class = SetorSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -219,5 +246,5 @@ class SetorViewSet(viewsets.ModelViewSet):
 class TotemPessoalViewSet(viewsets.ModelViewSet):
     queryset = TotemPessoal.objects.all()
     serializer_class = TotemPessoalSerializer
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated, )
 

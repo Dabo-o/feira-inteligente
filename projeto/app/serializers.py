@@ -1,8 +1,11 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
+from rest_framework.exceptions import ValidationError
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao, 
     ProdutoFavorito, LojaFavorita, Setor, TotemPessoal
 )
+
 
 class LojistaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,7 +73,23 @@ class LojaSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
+class ClienteRegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    senha = serializers.CharField(write_only=True)
+    nome = serializers.CharField()
+
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        senha = validated_data.pop('senha')
+        nome = validated_data.pop('nome')
+
+        user = User.objects.create_user(username=email, email=email, password=senha)
+        cliente = Cliente.objects.create(user=user, nome=nome, **validated_data)
+        return cliente
+
+
 class ClienteSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
     categorias_desejadas = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Categoria.objects.all()
@@ -82,11 +101,10 @@ class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = (
-            'id', 'nome', 'email', 'senha', 'telefone', 'foto', 'faixa_etaria',
+            'id', 'nome','email', 'cpf', 'telefone', 'foto', 'faixa_etaria',
             'genero', 'tipo', 'categorias_desejadas','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
-            'senha': {'write_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
             'atualizacao': {'read_only': True},

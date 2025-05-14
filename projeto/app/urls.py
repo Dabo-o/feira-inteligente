@@ -3,13 +3,13 @@ from rest_framework.routers import SimpleRouter
 from .views import (
     AvaliacaoViewSet, LojaViewSet, ProdutoViewSet, CategoriaViewSet,
     LojistaViewSet, ClienteViewSet, ProdutoFavoritoViewSet, LojaFavoritaViewSet,
-    SetorViewSet, TotemPessoalViewSet
+    SetorViewSet, TotemPessoalViewSet, RegisterView, meu_perfil
 )
 
 router = SimpleRouter()
 router.register('lojas', LojaViewSet, basename='lojas')
 router.register('avaliacoes', AvaliacaoViewSet)
-router.register('categorias', CategoriaViewSet)
+router.register('categorias', CategoriaViewSet) 
 router.register('produtos', ProdutoViewSet)
 router.register('lojistas', LojistaViewSet)
 router.register('clientes', ClienteViewSet)
@@ -20,5 +20,8 @@ router.register('totens', TotemPessoalViewSet)
 
 
 urlpatterns = [
+    path('register/', RegisterView.as_view(), name='register'),
+    path('meu-perfil/', meu_perfil),
+
     path('', include(router.urls)),
 ]

@@ -29,10 +29,16 @@ class SetorAdmin(admin.ModelAdmin):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'email', 'telefone', 'tipo', 'ativo', 'criacao', 'atualizacao')
-    search_fields = ('nome', 'email', 'telefone')
+    list_display = ('nome', 'get_email', 'telefone', 'tipo', 'ativo', 'criacao', 'atualizacao')
+    search_fields = ('nome', 'get_email', 'telefone')
     filter_horizontal = ['categorias_desejadas']
     list_filter = ('tipo', 'ativo')
+
+    def get_email(self, obj):
+        return obj.user.email
+    
+    get_email.short_description = 'Email'  # título da coluna no admin
+    get_email.admin_order_field = 'user__email'  # permite ordenação pelo email
 
 @admin.register(Loja)
 class LojaAdmin(admin.ModelAdmin):
