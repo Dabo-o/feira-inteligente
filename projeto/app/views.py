@@ -1,11 +1,11 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Avg
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import filters
+
+from django.db.models import Avg
+
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
     ProdutoFavorito, LojaFavorita, Setor, TotemPessoal

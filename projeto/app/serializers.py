@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from rest_framework.exceptions import ValidationError
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao, 
     ProdutoFavorito, LojaFavorita, Setor, TotemPessoal
