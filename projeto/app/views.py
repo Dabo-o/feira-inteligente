@@ -8,14 +8,23 @@ from django.db.models import Avg
 
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
-    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal
+    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, Mapas
 )
 from .serializers import (
     LojistaSerializer, ClienteSerializer, LojaSerializer, ProdutoSerializer,
     CategoriaSerializer, AvaliacaoSerializer, ProdutoFavoritoSerializer,
-    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer
+    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer, MapasSerializer, LojistaRegisterSerializer
 )
+class CriarLojistaView(APIView):
+    permission_classes = [AllowAny]
 
+    def post(self, request):
+        serializer = LojistaRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Lojista criado com sucesso!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def meu_perfil(request):
@@ -39,8 +48,19 @@ class RegisterView(APIView):
             serializer.save()
             return Response({"message": "Usuário criado com sucesso!"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     
+class MapaViewSet(viewsets.ModelViewSet):
+    queryset = Mapas.objects.all()
+    serializer_class = MapasSerializer
+    permission_classes = (IsAuthenticated, )
+
+    @action(detail=True, methods=['get'])
+    def loja(self, request, pk=None):
+        Mapas = self.get_object()
+        lojas = Mapas.loja.all()
+        serializer = LojaSerializer(lojas, many=True)
+        return Response(serializer.data)
+
 class LojistaViewSet(viewsets.ModelViewSet):
     queryset = Lojista.objects.all()
     serializer_class = LojistaSerializer
@@ -71,6 +91,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
         categorias_desejadas = cliente.categorias_desejadas.all()
         serializer = CategoriaSerializer(categorias_desejadas, many=True)
         return Response(serializer.data)
+    
 
     @action(detail=True, methods=['get'])
     def produtos_favoritos(self, request, pk=None):

@@ -5,7 +5,7 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*wi(l*uil19v_0t6e$yjncvh615or@kx7_&g^dc=-aikzcj7&h'
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 MEDIA_URL = '/media/'
@@ -67,8 +67,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'projeto.wsgi.application'
 
+#DATABASES = {
+#    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#}
+
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # banco de dados local
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 

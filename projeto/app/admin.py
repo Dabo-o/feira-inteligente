@@ -6,7 +6,7 @@ from .models import (
 
 @admin.register(Lojista)
 class LojistaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'email', 'telefone', 'cpf_cnpj', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('telefone', 'cpf_cnpj', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'email', 'cpf_cnpj')
     list_filter = ('ativo',)
 

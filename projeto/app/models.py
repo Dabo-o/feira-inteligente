@@ -11,15 +11,13 @@ class Base(models.Model):
 
 class Lojista(Base):
     nome = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
-    senha = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)
     cpf_cnpj = models.CharField(max_length=20)
     foto = models.ImageField(upload_to='lojistas/', blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.nome
+       return self.user.username
 
 class TotemPessoal(Base):
     TIPO_USUARIO_CHOICES = [
@@ -96,6 +94,11 @@ class Cliente(Base):
 
     def __str__(self):
         return self.nome
+    
+class Mapas(Base):
+    loja = models.ForeignKey('Loja', on_delete=models.SET_NULL, null=True, related_name='mapas_lojas')
+    mapa = models.ImageField(upload_to='produtos/', blank=True, null=True)
+
     
 class Produto(Base):
     nome = models.CharField(max_length=255)
