@@ -90,6 +90,44 @@ class LojaSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
+class ClienteRegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    senha = serializers.CharField(write_only=True)
+    nome = serializers.CharField()
+
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        senha = validated_data.pop('senha')
+        nome = validated_data.pop('nome')
+
+        user = User.objects.create_user(username=email, email=email, password=senha)
+        cliente = Cliente.objects.create(user=user, nome=nome, **validated_data)
+        return cliente
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+    categorias_desejadas = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
+
+    produtos_favoritos = ProdutoSerializer(many=True, read_only=True)
+    lojas_favoritas = LojaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Cliente
+        fields = (
+            'id', 'nome','email', 'cpf', 'telefone', 'foto', 'faixa_etaria',
+            'genero', 'tipo', 'categorias_desejadas','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
+        )
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'criacao': {'read_only': True},
+            'atualizacao': {'read_only': True},
+            'ativo': {'read_only': True},
+        }
+
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria

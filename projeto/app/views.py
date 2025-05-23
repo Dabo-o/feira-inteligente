@@ -8,13 +8,24 @@ from django.db.models import Avg
 
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
-    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, Mapas
+    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, Mapas, AcaoUsuario
 )
 from .serializers import (
     LojistaSerializer, ClienteSerializer, LojaSerializer, ProdutoSerializer,
     CategoriaSerializer, AvaliacaoSerializer, ProdutoFavoritoSerializer,
-    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer, MapasSerializer, LojistaRegisterSerializer
+    LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer, 
+    MapasSerializer, LojistaRegisterSerializer
 )
+
+def registrar_acao(usuario, acao, loja=None, produto=None, detalhes=''):
+    AcaoUsuario.objects.create(
+        usuario=usuario,
+        acao=acao,
+        loja=loja,
+        produto=produto,
+        detalhes=detalhes
+    )
+
 class CriarLojistaView(APIView):
     permission_classes = [AllowAny]
 
@@ -112,6 +123,19 @@ class LojaViewSet(viewsets.ModelViewSet):
     serializer_class = LojaSerializer
     permission_classes = (IsAuthenticated, )
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Registra a ação automaticamente
+        if request.user.is_authenticated:
+            registrar_acao(
+                usuario=request.user,
+                acao='visualizou loja',
+                loja=instance
+            )
+
+        return super().retrieve(request, *args, **kwargs)
+
 
     def get_queryset(self):
         queryset = Loja.objects.annotate(nota_media=Avg('avaliacoes_recebidas__nota'))
@@ -152,6 +176,18 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
     permission_classes = (IsAuthenticated, )
+
+    def retrieve(self, request, *args, **kwargs):
+        produto = self.get_object()
+
+        if request.user.is_authenticated:
+            registrar_acao(
+                usuario=request.user,
+                acao='visualizou produto',
+                produto=produto
+            )
+
+        return super().retrieve(request, *args, **kwargs)
 
     # ACTION PARA BUSCAR PELO NOME
     def get_queryset(self):

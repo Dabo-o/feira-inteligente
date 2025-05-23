@@ -9,6 +9,17 @@ class Base(models.Model):
     class Meta:
         abstract = True
 
+class AcaoUsuario(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    acao = models.CharField(max_length=100)  # ex: "entrou na loja", "visualizou produto"
+    timestamp = models.DateTimeField(auto_now_add=True)
+    loja = models.ForeignKey('Loja', null=True, blank=True, on_delete=models.SET_NULL)
+    produto = models.ForeignKey('Produto', null=True, blank=True, on_delete=models.SET_NULL)
+    detalhes = models.TextField(blank=True)  # opcional, para info adicional (ex: navegador, IP)
+
+    def __str__(self):
+        return f'{self.usuario} fez {self.acao} em {self.timestamp}'
+
 class Lojista(Base):
     nome = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)

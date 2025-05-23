@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Lojista, TotemPessoal, Categoria, Setor, Cliente, Loja,
-    Produto, Avaliacao, ProdutoFavorito, LojaFavorita
+    Produto, Avaliacao, ProdutoFavorito, LojaFavorita, AcaoUsuario
 )
 
 @admin.register(Lojista)
@@ -73,3 +73,9 @@ class LojaFavoritaAdmin(admin.ModelAdmin):
     list_display = ('cliente', 'loja','ativo', 'criacao', 'atualizacao')
     search_fields = ('cliente__nome', 'loja__nome')
     list_filter = ('ativo',)
+
+@admin.register(AcaoUsuario)
+class AcaoUsuarioAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'acao', 'timestamp', 'loja', 'produto', 'detalhes')
+    list_filter = ('acao', 'loja', 'timestamp')
+    search_fields = ('usuario__username', 'acao', 'loja__nome')
