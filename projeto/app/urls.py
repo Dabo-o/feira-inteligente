@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 from .views import (
-    AvaliacaoViewSet, LojaViewSet, ProdutoViewSet, CategoriaViewSet,
-    LojistaViewSet, ClienteViewSet, ProdutoFavoritoViewSet, LojaFavoritaViewSet,
-    SetorViewSet, TotemPessoalViewSet, RegisterView, meu_perfil, MapaViewSet, CriarLojistaView
+    AvaliacaoViewSet, LojaViewSet, ProdutoViewSet, CategoriaViewSet, AcaoUsuarioViewSet,
+    LojistaViewSet, ClienteViewSet, ProdutoFavoritoViewSet, LojaFavoritaViewSet, PesquisaViewSet,
+    SetorViewSet, TotemPessoalViewSet, RegisterView, meu_perfil, MapaViewSet, CriarLojistaView,
 )
 
 router = SimpleRouter()
@@ -18,6 +18,9 @@ router.register('lojas_favoritas', LojaFavoritaViewSet)
 router.register('setores', SetorViewSet)
 router.register('totens', TotemPessoalViewSet)
 router.register('mapa', MapaViewSet)
+router.register(r'acoes', AcaoUsuarioViewSet, basename='acao')
+router.register('pesquisa', PesquisaViewSet, basename='pesquisa')
+
 
 
 urlpatterns = [

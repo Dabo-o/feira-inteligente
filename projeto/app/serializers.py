@@ -2,8 +2,13 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao, 
-    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, Mapas
+    ProdutoFavorito, LojaFavorita, Setor, TotemPessoal, Mapas, AcaoUsuario
 )
+
+class AcaoUsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcaoUsuario
+        fields = '__all__'
 
 class LojistaRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -55,6 +60,36 @@ class ProdutoSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
+class PesquisaSerializer(serializers.ModelSerializer):
+
+    nota_media = serializers.FloatField(read_only=True)
+    produtos = ProdutoSerializer(many=True)
+    categorias = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Categoria.objects.all()
+    )
+    avaliacoes = serializers.PrimaryKeyRelatedField(
+        many=True,
+        read_only=True,
+        source='avaliacoes_recebidas'  # ou o related_name que você usou no model
+    )
+
+
+    class Meta:
+        model = Loja
+        fields = (
+            'id', 'nome', 'banner', 'logo', 'descricao','produtos','setor', 'categorias', 'localizacao',
+            'lojista', 'foto_da_loja', 'Instagram','WhatsApp','Website', 'horario_funcionamento', 
+            'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo'
+        )
+        extra_kwargs = {
+            'nota_media': {'read_only': True},
+            'avaliacoes': {'read_only': True},
+            'id': {'read_only': True},
+            'criacao': {'read_only': True},
+            'atualizacao': {'read_only': True},
+            'ativo': {'read_only': True},
+        }
 
 class LojaSerializer(serializers.ModelSerializer):
 
@@ -78,9 +113,10 @@ class LojaSerializer(serializers.ModelSerializer):
         model = Loja
         fields = (
             'id', 'nome', 'banner', 'logo', 'descricao','produtos','setor', 'categorias', 'localizacao',
-            'lojista', 'foto_da_loja', 'redes_sociais', 'horario_funcionamento', 
+            'lojista', 'foto_da_loja', 'Instagram','WhatsApp','Website', 'horario_funcionamento', 
             'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo'
         )
+        
         extra_kwargs = {
             'nota_media': {'read_only': True},
             'avaliacoes': {'read_only': True},
@@ -89,6 +125,13 @@ class LojaSerializer(serializers.ModelSerializer):
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
         }
+
+    def create(self, validated_data):
+        produtos_data = validated_data.pop('produtos')
+        loja = Loja.objects.create(**validated_data)
+        for produto_data in produtos_data:
+            Produto.objects.create(loja=loja, **produto_data)
+        return loja
 
 class ClienteRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()

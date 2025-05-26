@@ -14,7 +14,7 @@ from .serializers import (
     LojistaSerializer, ClienteSerializer, LojaSerializer, ProdutoSerializer,
     CategoriaSerializer, AvaliacaoSerializer, ProdutoFavoritoSerializer,
     LojaFavoritaSerializer, SetorSerializer, TotemPessoalSerializer, ClienteRegisterSerializer, 
-    MapasSerializer, LojistaRegisterSerializer
+    MapasSerializer, LojistaRegisterSerializer, AcaoUsuarioSerializer, PesquisaSerializer
 )
 
 def registrar_acao(usuario, acao, loja=None, produto=None, detalhes=''):
@@ -117,6 +117,65 @@ class ClienteViewSet(viewsets.ModelViewSet):
         lojas = cliente.lojas_favoritas.all()
         serializer = LojaSerializer(lojas, many=True)
         return Response(serializer.data)
+    
+class AcaoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AcaoUsuario.objects.all().order_by('-timestamp')
+    serializer_class = AcaoUsuarioSerializer
+    permission_classes = [IsAuthenticated]  # ou alguma permissão mais específica
+
+class PesquisaViewSet(viewsets.ModelViewSet):
+    serializer_class = PesquisaSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Registra a ação automaticamente
+        if request.user.is_authenticated:
+            registrar_acao(
+                usuario=request.user,
+                acao='visualizou loja',
+                loja=instance
+            )
+
+        return super().retrieve(request, *args, **kwargs)
+
+
+    def get_queryset(self):
+        queryset = Loja.objects.annotate(nota_media=Avg('avaliacoes_recebidas__nota'))
+        nome = self.request.query_params.get('nome')
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
+    # ACTION PARA PAGINAÇÃO
+    @action(detail=True, methods=['get'])
+    def avaliacoes(self, request, pk=None):
+        self.pagination_class.page_size = 1  # Paginação: 1 por página
+        avaliacoes = Avaliacao.objects.filter(loja_id=pk)
+        page = self.paginate_queryset(avaliacoes)
+        if page is not None:
+            serializer = AvaliacaoSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
+        return Response(serializer.data)
+    
+    # ACTION PARA ENDPOINT /lojas/1/produtos
+    @action(detail=True, methods=['get'])
+    def produtos(self, request, pk=None):
+        loja = self.get_object()
+        produtos = loja.produtos.all()
+        serializer = ProdutoSerializer(produtos, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def categorias(self, request, pk=None):
+        loja = self.get_object()
+        categorias = loja.categorias.all()
+        serializer = CategoriaSerializer(categorias, many=True)
+        return Response(serializer.data)
+
+    
 
 class LojaViewSet(viewsets.ModelViewSet):
 
