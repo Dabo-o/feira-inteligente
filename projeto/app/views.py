@@ -4,7 +4,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from django.db.models import Avg
+from django.db.models import Avg, Q
 
 from .models import (
     Lojista, Cliente, Loja, Produto, Categoria, Avaliacao,
@@ -123,57 +123,30 @@ class AcaoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AcaoUsuarioSerializer
     permission_classes = [IsAuthenticated]  # ou alguma permissão mais específica
 
-class PesquisaViewSet(viewsets.ModelViewSet):
-    serializer_class = PesquisaSerializer
+class PesquisaView(APIView):
     permission_classes = (IsAuthenticated, )
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        
-        # Registra a ação automaticamente
-        if request.user.is_authenticated:
-            registrar_acao(
-                usuario=request.user,
-                acao='visualizou loja',
-                loja=instance
-            )
+    def get(self, request):
+        termo = request.query_params.get('nome', '')
 
-        return super().retrieve(request, *args, **kwargs)
+        # Lojas que têm no nome OU têm produtos com esse nome
+        lojas = Loja.objects.annotate(
+            nota_media=Avg('avaliacoes_recebidas__nota')
+        ).filter(
+            nome__icontains=termo
+        ).distinct()
 
+        # Produtos individualmente que batem com o nome
+        produtos = Produto.objects.filter(nome__icontains=termo)
 
-    def get_queryset(self):
-        queryset = Loja.objects.annotate(nota_media=Avg('avaliacoes_recebidas__nota'))
-        nome = self.request.query_params.get('nome')
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        return queryset
+        # Serializa tudo
+        lojas_serializadas = PesquisaSerializer(lojas, many=True, context={'request': request})
+        produtos_serializados = ProdutoSerializer(produtos, many=True, context={'request': request})
 
-    # ACTION PARA PAGINAÇÃO
-    @action(detail=True, methods=['get'])
-    def avaliacoes(self, request, pk=None):
-        self.pagination_class.page_size = 1  # Paginação: 1 por página
-        avaliacoes = Avaliacao.objects.filter(loja_id=pk)
-        page = self.paginate_queryset(avaliacoes)
-        if page is not None:
-            serializer = AvaliacaoSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
-        return Response(serializer.data)
-    
-    # ACTION PARA ENDPOINT /lojas/1/produtos
-    @action(detail=True, methods=['get'])
-    def produtos(self, request, pk=None):
-        loja = self.get_object()
-        produtos = loja.produtos.all()
-        serializer = ProdutoSerializer(produtos, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def categorias(self, request, pk=None):
-        loja = self.get_object()
-        categorias = loja.categorias.all()
-        serializer = CategoriaSerializer(categorias, many=True)
-        return Response(serializer.data)
+        return Response({
+            'lojas': lojas_serializadas.data,
+            'produtos': produtos_serializados.data
+        })
 
     
 

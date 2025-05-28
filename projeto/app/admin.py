@@ -46,7 +46,6 @@ class LojaAdmin(admin.ModelAdmin):
     search_fields = ('nome', 'localizacao', 'lojista__nome')
     filter_horizontal = ['categorias']
     filter_horizontal = ['avaliacoes']
-    filter_horizontal = ['produtos']
     list_filter = ('ativo',)
 
 @admin.register(Produto)

@@ -50,7 +50,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
         fields = (
-            'id', 'nome', 'descricao', 'imagem', 'categorias', 'cor', 
+            'id', 'nome', 'descricao', 'loja', 'imagem', 'categorias', 'cor', 
             'composicao', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
@@ -85,6 +85,7 @@ class PesquisaSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'nota_media': {'read_only': True},
             'avaliacoes': {'read_only': True},
+            'produtos': {'read_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
             'atualizacao': {'read_only': True},
@@ -120,18 +121,13 @@ class LojaSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'nota_media': {'read_only': True},
             'avaliacoes': {'read_only': True},
+            'produtos': {'read_only': True},
             'id': {'read_only': True},
             'criacao': {'read_only': True},
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
         }
 
-    def create(self, validated_data):
-        produtos_data = validated_data.pop('produtos')
-        loja = Loja.objects.create(**validated_data)
-        for produto_data in produtos_data:
-            Produto.objects.create(loja=loja, **produto_data)
-        return loja
 
 class ClienteRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
