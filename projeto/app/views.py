@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.db.models import Avg, Q
 
@@ -26,6 +27,17 @@ def registrar_acao(usuario, acao, loja=None, produto=None, detalhes=''):
         detalhes=detalhes
     )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        refresh_token = request.data["refresh"]
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response({"detail": "Logout realizado com sucesso."})
+    except Exception as e:
+        return Response({"error": "Token inválido ou expirado."}, status=400)
+
 class CriarLojistaView(APIView):
     permission_classes = [AllowAny]
 
@@ -42,13 +54,44 @@ def meu_perfil(request):
     user = request.user
     data = {"email": user.email}
 
-    if hasattr(user, 'cliente'):
-        data["cliente"] = ClienteSerializer(user.cliente).data
+    try:
+        if hasattr(user, 'cliente'):
+            data["cliente"] = ClienteSerializer(user.cliente, context={"request": request}).data
+    except Exception as e:
+        data["cliente_erro"] = f"Erro ao serializar cliente: {str(e)}"
 
-    if hasattr(user, 'lojista'):
-        data["lojista"] = LojistaSerializer(user.lojista).data
+    try:
+        if hasattr(user, 'lojista'):
+            data["lojista"] = LojistaSerializer(user.lojista, context={"request": request}).data
+    except Exception as e:
+        data["lojista_erro"] = f"Erro ao serializar lojista: {str(e)}"
 
     return Response(data)
+
+
+class LojasRecomendadasView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    
+    def get(self, request):
+        cliente = request.user.cliente  # ou ajuste conforme sua relação
+        categorias = cliente.categorias_desejadas.all()
+        lojas = Loja.objects.annotate(
+            nota_media=Avg('avaliacoes_recebidas__nota')
+        ).filter(categorias__in=categorias).distinct()
+        serializer = LojaSerializer(lojas, many=True, context={"request": request})
+        return Response(serializer.data)
+    
+class ProdutosRecomendadosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cliente = request.user.cliente  # ou ajuste conforme sua relação
+        categorias = cliente.categorias_desejadas.all()
+        produtos = Produto.objects.filter(categorias__in=categorias).distinct()
+        serializer = ProdutoSerializer(produtos, many=True, context={"request": request})
+        return Response(serializer.data)
+    
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -83,6 +126,13 @@ class LojistaViewSet(viewsets.ModelViewSet):
         if nome:
             queryset = queryset.filter(nome__icontains=nome)
         return queryset
+    
+    @action(detail=True, methods=['get'])
+    def loja(self, request, pk=None):
+        lojista = self.get_object()
+        lojas = Loja.objects.get(lojista=lojista)  # Aqui usamos filter
+        serializer = LojaSerializer(lojas, many=False, context={'request': request})
+        return Response(serializer.data)
 
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
@@ -104,18 +154,39 @@ class ClienteViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 
-    @action(detail=True, methods=['get'])
-    def produtos_favoritos(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_path='produtos_favoritos(?:/(?P<id_produto>\d+))?')
+    def produtos_favoritos(self, request, pk=None, id_produto=None):
         cliente = self.get_object()
+        
+        if id_produto:
+            try:
+                produto = cliente.produtos_favoritos.get(id=id_produto)
+            except Produto.DoesNotExist:
+                return Response({"detail": "Produto não encontrado entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = ProdutoSerializer(produto, context={'request': request})
+            return Response(serializer.data)
+        
+        # Sem id_loja, retorna todas
         produtos = cliente.produtos_favoritos.all()
-        serializer = ProdutoSerializer(produtos, many=True)
+        serializer = ProdutoSerializer(produtos, many=True, context={'request': request})
         return Response(serializer.data)
+    
 
-    @action(detail=True, methods=['get'])
-    def lojas_favoritas(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_path='lojas_favoritas(?:/(?P<id_loja>\d+))?')
+    def lojas_favoritas(self, request, pk=None, id_loja=None):
         cliente = self.get_object()
+        
+        if id_loja:
+            try:
+                loja = cliente.lojas_favoritas.get(id=id_loja)
+            except Loja.DoesNotExist:
+                return Response({"detail": "Loja não encontrada entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = LojaSerializer(loja, context={'request': request})
+            return Response(serializer.data)
+        
+        # Sem id_loja, retorna todas
         lojas = cliente.lojas_favoritas.all()
-        serializer = LojaSerializer(lojas, many=True)
+        serializer = LojaSerializer(lojas, many=True, context={'request': request})
         return Response(serializer.data)
     
 class AcaoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
@@ -126,6 +197,19 @@ class AcaoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
 class PesquisaView(APIView):
     permission_classes = (IsAuthenticated, )
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Registra a ação automaticamente
+        if request.user.is_authenticated:
+            registrar_acao(
+                usuario=request.user,
+                acao='visualizou loja',
+                loja=instance
+            )
+
+        return super().retrieve(request, *args, **kwargs)
+    
     def get(self, request):
         termo = request.query_params.get('nome', '')
 

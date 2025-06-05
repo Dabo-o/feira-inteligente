@@ -88,7 +88,7 @@ class Cliente(Base):
     genero = models.CharField(max_length=50)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)    
     categorias_desejadas = models.ManyToManyField(Categoria, related_name='clientes', blank=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cliente')
     
     produtos_favoritos = models.ManyToManyField(
         'Produto',
@@ -124,19 +124,19 @@ class Produto(Base):
         return self.nome
 
 class Loja(Base):
-    nome = models.CharField(max_length=255)
+    nome = models.CharField(max_length=255,blank=True, null=True)
     banner = models.ImageField(upload_to='lojas/banners/', blank=True, null=True)
     logo = models.ImageField(upload_to='lojas/logos/', blank=True, null=True)
-    descricao = models.TextField()
+    descricao = models.TextField(blank=True, null=True)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE,null = True, related_name="lojas")
     categorias = models.ManyToManyField(Categoria, related_name="lojas")
-    localizacao = models.CharField(max_length=255)
+    localizacao = models.CharField(max_length=255, blank=True, null=True)
     lojista = models.ForeignKey(Lojista, on_delete=models.CASCADE, related_name='lojas')
     foto_da_loja = models.ImageField(upload_to='lojas/fotos/', blank=True, null=True)
     Instagram = models.TextField(blank=True, null=True)
     WhatsApp = models.TextField(blank=True, null=True)
     Website = models.TextField(blank=True, null=True)
-    horario_funcionamento = models.CharField(max_length=255)
+    horario_funcionamento = models.CharField(max_length=255,blank=True, null=True)
     avaliacoes = models.ManyToManyField('Avaliacao', related_name='lojas', blank=True)
     nota = models.FloatField(default=0)
 

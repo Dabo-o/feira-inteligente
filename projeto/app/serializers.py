@@ -43,6 +43,7 @@ class LojistaSerializer(serializers.ModelSerializer):
 
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    favoritado = serializers.SerializerMethodField()
     categorias = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Categoria.objects.all()
@@ -51,7 +52,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
         model = Produto
         fields = (
             'id', 'nome', 'descricao', 'loja', 'imagem', 'categorias', 'cor', 
-            'composicao', 'criacao', 'atualizacao', 'ativo'
+            'composicao', 'criacao', 'atualizacao', 'ativo', 'favoritado'
         )
         extra_kwargs = {
             'id': {'read_only': True},
@@ -59,6 +60,12 @@ class ProdutoSerializer(serializers.ModelSerializer):
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
         }
+    
+    def get_favoritado(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated and hasattr(user, 'cliente'):
+            return ProdutoFavorito.objects.filter(produto=obj, cliente=user.cliente).exists()
+        return False
 
 class PesquisaSerializer(serializers.ModelSerializer):
 
@@ -93,7 +100,7 @@ class PesquisaSerializer(serializers.ModelSerializer):
         }
 
 class LojaSerializer(serializers.ModelSerializer):
-
+    favoritado = serializers.SerializerMethodField()
     nota_media = serializers.FloatField(read_only=True)
     produtos = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -115,7 +122,7 @@ class LojaSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'nome', 'banner', 'logo', 'descricao','produtos','setor', 'categorias', 'localizacao',
             'lojista', 'foto_da_loja', 'Instagram','WhatsApp','Website', 'horario_funcionamento', 
-            'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo'
+            'avaliacoes', 'nota_media', 'criacao', 'atualizacao', 'ativo', 'favoritado'
         )
         
         extra_kwargs = {
@@ -128,11 +135,23 @@ class LojaSerializer(serializers.ModelSerializer):
             'ativo': {'read_only': True},
         }
 
+    def get_favoritado(self, obj):
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
 
-class ClienteRegisterSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+        if user and hasattr(user, 'cliente'):
+            return LojaFavorita.objects.filter(loja=obj, cliente=user.cliente).exists()
+        return False
+
+
+
+class ClienteRegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(write_only=True)
     senha = serializers.CharField(write_only=True)
-    nome = serializers.CharField()
+
+    class Meta:
+        model = Cliente
+        fields = ('nome', 'email', 'senha')
 
     def create(self, validated_data):
         email = validated_data.pop('email')
@@ -143,7 +162,6 @@ class ClienteRegisterSerializer(serializers.Serializer):
         cliente = Cliente.objects.create(user=user, nome=nome, **validated_data)
         return cliente
 
-
 class ClienteSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     categorias_desejadas = serializers.PrimaryKeyRelatedField(
@@ -153,11 +171,16 @@ class ClienteSerializer(serializers.ModelSerializer):
 
     produtos_favoritos = ProdutoSerializer(many=True, read_only=True)
     lojas_favoritas = LojaSerializer(many=True, read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True) 
+
+    def update(self, instance, validated_data):
+        validated_data.pop('user', None)  # impede sobrescrita
+        return super().update(instance, validated_data)
 
     class Meta:
         model = Cliente
         fields = (
-            'id', 'nome','email', 'cpf', 'telefone', 'foto', 'faixa_etaria',
+            'id','user', 'nome','email', 'cpf', 'telefone', 'foto', 'faixa_etaria',
             'genero', 'tipo', 'categorias_desejadas','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
@@ -165,6 +188,7 @@ class ClienteSerializer(serializers.ModelSerializer):
             'criacao': {'read_only': True},
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
+            'user': {'read_only': True},
         }
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -181,10 +205,12 @@ class CategoriaSerializer(serializers.ModelSerializer):
         }
 
 class AvaliacaoSerializer(serializers.ModelSerializer):
+    nome_cliente = serializers.SerializerMethodField()
+
     class Meta:
         model = Avaliacao
         fields = (
-            'id', 'cliente', 'loja', 'nota', 'comentario',
+            'id', 'cliente', 'nome_cliente', 'loja', 'nota', 'comentario',
             'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
@@ -193,6 +219,11 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
             'atualizacao': {'read_only': True},
             'ativo': {'read_only': True},
         }
+
+    def get_nome_cliente(self, obj):
+        return obj.cliente.nome if obj.cliente else None
+
+
 
 class ProdutoFavoritoSerializer(serializers.ModelSerializer):
     class Meta:
