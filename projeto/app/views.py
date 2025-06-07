@@ -52,11 +52,13 @@ class CriarLojistaView(APIView):
 @permission_classes([IsAuthenticated])
 def meu_perfil(request):
     user = request.user
+    dataid = {"id": user.id}
     data = {"email": user.email}
 
     try:
         if hasattr(user, 'cliente'):
             data["cliente"] = ClienteSerializer(user.cliente, context={"request": request}).data
+            dataid["cliente"] = ClienteSerializer(user.cliente, context={"resquest": request}).dataid
     except Exception as e:
         data["cliente_erro"] = f"Erro ao serializar cliente: {str(e)}"
 
@@ -154,45 +156,76 @@ class ClienteViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 
-    @action(detail=True, methods=['get'], url_path='produtos_favoritos(?:/(?P<id_produto>\d+))?')
+    @action(detail=True, methods=['get', 'delete'], url_path='produtos_favoritos(?:/(?P<id_produto>\d+))?')
     def produtos_favoritos(self, request, pk=None, id_produto=None):
         cliente = self.get_object()
-        
-        if id_produto:
-            try:
-                produto = cliente.produtos_favoritos.get(id=id_produto)
-            except Produto.DoesNotExist:
-                return Response({"detail": "Produto não encontrado entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
-            serializer = ProdutoSerializer(produto, context={'request': request})
-            return Response(serializer.data)
-        
-        # Sem id_loja, retorna todas
-        produtos = cliente.produtos_favoritos.all()
-        serializer = ProdutoSerializer(produtos, many=True, context={'request': request})
-        return Response(serializer.data)
-    
 
-    @action(detail=True, methods=['get'], url_path='lojas_favoritas(?:/(?P<id_loja>\d+))?')
+        if request.method == 'GET':
+            if id_produto:
+                try:
+                    produto = cliente.produtos_favoritos.get(id=id_produto)
+                except Produto.DoesNotExist:
+                    return Response({"detail": "Produto não encontrado entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
+                serializer = ProdutoSerializer(produto, context={'request': request})
+                return Response(serializer.data)
+
+            produtos = cliente.produtos_favoritos.all()
+            serializer = ProdutoSerializer(produtos, many=True, context={'request': request})
+            return Response(serializer.data)
+
+        elif request.method == 'DELETE':
+            if not id_produto:
+                return Response({"detail": "É necessário informar o ID do produto para remover."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                produto = Produto.objects.get(id=id_produto)
+            except Produto.DoesNotExist:
+                return Response({"detail": "Produto não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            cliente.produtos_favoritos.remove(produto)
+            return Response({"detail": "Produto removido dos favoritos."}, status=status.HTTP_204_NO_CONTENT)
+
+
+    @action(detail=True, methods=['get', 'delete'], url_path='lojas_favoritas(?:/(?P<id_loja>\d+))?')
     def lojas_favoritas(self, request, pk=None, id_loja=None):
         cliente = self.get_object()
-        
-        if id_loja:
-            try:
-                loja = cliente.lojas_favoritas.get(id=id_loja)
-            except Loja.DoesNotExist:
-                return Response({"detail": "Loja não encontrada entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
-            serializer = LojaSerializer(loja, context={'request': request})
+
+        if request.method == 'GET':
+            if id_loja:
+                try:
+                    loja = cliente.lojas_favoritas.get(id=id_loja)
+                except Loja.DoesNotExist:
+                    return Response({"detail": "Loja não encontrada entre os favoritos."}, status=status.HTTP_404_NOT_FOUND)
+                serializer = LojaSerializer(loja, context={'request': request})
+                return Response(serializer.data)
+
+            lojas = cliente.lojas_favoritas.all()
+            serializer = LojaSerializer(lojas, many=True, context={'request': request})
             return Response(serializer.data)
-        
-        # Sem id_loja, retorna todas
-        lojas = cliente.lojas_favoritas.all()
-        serializer = LojaSerializer(lojas, many=True, context={'request': request})
-        return Response(serializer.data)
+
+        elif request.method == 'DELETE':
+            if not id_loja:
+                return Response({"detail": "É necessário informar o ID da loja para remover."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                loja = Loja.objects.get(id=id_loja)
+            except Loja.DoesNotExist:
+                return Response({"detail": "Loja não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            cliente.lojas_favoritas.remove(loja)
+            return Response({"detail": "Loja removido dos favoritos."}, status=status.HTTP_204_NO_CONTENT)
     
 class AcaoUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AcaoUsuario.objects.all().order_by('-timestamp')
     serializer_class = AcaoUsuarioSerializer
     permission_classes = [IsAuthenticated]  # ou alguma permissão mais específica
+
+    @action(detail=True, methods=['get'])
+    def lojas(self, request, pk=None):
+        acao = self.get_object()
+        lojas = acao.lojas.all()
+        serializer = CategoriaSerializer(categorias_desejadas, many=True)
+        return Response(serializer.data)
 
 class PesquisaView(APIView):
     permission_classes = (IsAuthenticated, )
