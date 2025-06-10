@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from django.db.models import Avg, Q
 
@@ -293,24 +294,29 @@ class LojaViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(nome__icontains=nome)
         return queryset
 
-    # ACTION PARA PAGINAÇÃO
     @action(detail=True, methods=['get'])
     def avaliacoes(self, request, pk=None):
-        self.pagination_class.page_size = 1  # Paginação: 1 por página
         avaliacoes = Avaliacao.objects.filter(loja_id=pk)
-        page = self.paginate_queryset(avaliacoes)
-        if page is not None:
-            serializer = AvaliacaoSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
+        serializer = AvaliacaoSerializer(avaliacoes, many=True)
         return Response(serializer.data)
+
+    # # ACTION PARA PAGINAÇÃO
+    # @action(detail=True, methods=['get'])
+    # def avaliacoes(self, request, pk=None):
+    #     self.pagination_class.page_size = 1  # Paginação: 1 por página
+    #     avaliacoes = Avaliacao.objects.filter(loja_id=pk)
+    #     page = self.paginate_queryset(avaliacoes)
+    #     if page is not None:
+    #         serializer = AvaliacaoSerializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #     serializer = AvaliacaoSerializer(avaliacoes.all(), many=True)
+    #     return Response(serializer.data)
     
     # ACTION PARA ENDPOINT /lojas/1/produtos
     @action(detail=True, methods=['get'])
     def produtos(self, request, pk=None):
         loja = self.get_object()
-        produtos = loja.produtos.all()
-        serializer = ProdutoSerializer(produtos, many=True)
+        serializer = ProdutoSerializer(loja.produtos.all(), many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])

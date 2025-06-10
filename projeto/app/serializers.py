@@ -29,7 +29,7 @@ class LojistaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lojista
         fields = (
-            'id', 'nome', 'email', 'telefone', 'cpf_cnpj', 'foto',
+            'id', 'nome', 'email', 'telefone','genero', 'cnpj', 'foto',
             'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {
@@ -62,10 +62,13 @@ class ProdutoSerializer(serializers.ModelSerializer):
         }
     
     def get_favoritado(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated and hasattr(user, 'cliente'):
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
+
+        if user and hasattr(user, 'cliente'):
             return ProdutoFavorito.objects.filter(produto=obj, cliente=user.cliente).exists()
         return False
+
 
 class PesquisaSerializer(serializers.ModelSerializer):
 
@@ -104,7 +107,7 @@ class LojaSerializer(serializers.ModelSerializer):
     nota_media = serializers.FloatField(read_only=True)
     produtos = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=Produto.objects.all()
+        read_only=True
     )
     categorias = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -180,7 +183,7 @@ class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = (
-            'id','user', 'nome','email', 'cpf', 'telefone', 'foto', 'faixa_etaria',
+            'id','user', 'nome','email', 'cpf', 'telefone', 'foto', 'data_nascimento',
             'genero', 'tipo', 'categorias_desejadas','produtos_favoritos', 'lojas_favoritas', 'criacao', 'atualizacao', 'ativo'
         )
         extra_kwargs = {

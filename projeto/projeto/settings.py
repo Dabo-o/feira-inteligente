@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import dj_database_url
 from datetime import timedelta
+from corsheaders.defaults import default_headers
+
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,6 +55,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+CORS_ALLOW_ALL_ORIGINS = True  # Ou use CORS_ALLOWED_ORIGINS com seu domínio
+CORS_ALLOW_HEADERS = list(default_headers) + ['Authorization']
 
 ROOT_URLCONF = 'projeto.urls'
 
@@ -118,6 +122,4 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
 }

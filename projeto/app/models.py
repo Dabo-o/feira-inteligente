@@ -23,8 +23,9 @@ class AcaoUsuario(models.Model):
 class Lojista(Base):
     nome = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)
-    cpf_cnpj = models.CharField(max_length=20)
+    cnpj = models.CharField(max_length=20)
     foto = models.ImageField(upload_to='lojistas/', blank=True, null=True)
+    genero = models.CharField(max_length=50, blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -71,20 +72,11 @@ class Cliente(Base):
         ('Local', 'Local'),
         ('Comerciante', 'Comerciante'),
     ]
-    FAIXA_ETARIA_CHOICES = [
-        ('18-', '18-'),
-        ('18-25', '18-25'),
-        ('26-35', '26-35'), 
-        ('36-45', '36-45'),
-        ('46-55', '46-55'),
-        ('56-65', '56-65'),
-        ('65+', '65+'),
-    ]
     nome = models.CharField(max_length=255)
     cpf = models.CharField(max_length=15)
     telefone = models.CharField(max_length=20)
     foto = models.ImageField(upload_to='clientes/', blank=True, null=True)
-    faixa_etaria = models.CharField(max_length=10, choices=FAIXA_ETARIA_CHOICES)
+    data_nascimento = models.CharField(max_length=20, blank=True, null=True)
     genero = models.CharField(max_length=50)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)    
     categorias_desejadas = models.ManyToManyField(Categoria, related_name='clientes', blank=True)

@@ -6,8 +6,8 @@ from .models import (
 
 @admin.register(Lojista)
 class LojistaAdmin(admin.ModelAdmin):
-    list_display = ('telefone', 'cpf_cnpj', 'ativo', 'criacao', 'atualizacao')
-    search_fields = ('nome', 'email', 'cpf_cnpj')
+    list_display = ('telefone', 'cnpj', 'genero', 'ativo', 'criacao', 'atualizacao')
+    search_fields = ('nome', 'email', 'cnpj')
     list_filter = ('ativo',)
 
 @admin.register(TotemPessoal)
@@ -29,7 +29,7 @@ class SetorAdmin(admin.ModelAdmin):
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'get_email', 'telefone', 'tipo', 'ativo', 'criacao', 'atualizacao')
+    list_display = ('nome', 'get_email', 'telefone', 'data_nascimento', 'tipo', 'ativo', 'criacao', 'atualizacao')
     search_fields = ('nome', 'get_email', 'telefone')
     filter_horizontal = ['categorias_desejadas']
     list_filter = ('tipo', 'ativo')
