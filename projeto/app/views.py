@@ -331,6 +331,12 @@ class LojaViewSet(viewsets.ModelViewSet):
         acoes = AcaoUsuario.objects.filter(loja_id=pk)
         serializer = AcaoUsuarioSerializer(acoes, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def favoritas(self, request, pk=None):
+        favoritos = LojaFavorita.objects.filter(loja_id=pk)
+        serializer = LojaFavoritaSerializer(favoritos, many=True)
+        return Response(serializer.data)
 
     
 
@@ -372,6 +378,12 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         produto = self.get_object()
         categorias = produto.categorias.all()
         serializer = CategoriaSerializer(categorias, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def favoritos(self, request, pk=None):
+        favoritos = ProdutoFavorito.objects.filter(produto_id=pk)
+        serializer = ProdutoFavoritoSerializer(favoritos, many=True)
         return Response(serializer.data)
 
 class CategoriaViewSet(viewsets.ModelViewSet):
