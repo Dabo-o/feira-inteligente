@@ -326,6 +326,13 @@ class LojaViewSet(viewsets.ModelViewSet):
         serializer = CategoriaSerializer(categorias, many=True)
         return Response(serializer.data)
     
+    @action(detail=True, methods=['get'])
+    def acoes(self, request, pk=None):
+        acoes = AcaoUsuario.objects.filter(loja_id=pk)
+        serializer = AcaoUsuarioSerializer(acoes, many=True)
+        return Response(serializer.data)
+
+    
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
